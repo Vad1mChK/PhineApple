@@ -10,16 +10,51 @@ export const fetchSummary = createAsyncThunk<DailySummary[]>('habits/summary', a
     const today = new Date();
     const from = format(subDays(today, 180), 'yyyy-MM-dd');
     const to = format(today, 'yyyy-MM-dd');
-    const { data } = await api.get<DailySummary[]>(`/habits/summary?from=${from}&to=${to}`);
+    const { data } = await api.get<DailySummary[]>(
+        `/habits/summary?from=${from}&to=${to}`,
+        {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem("token")}`
+            }
+        }
+    );
     return data;
 });
 
 export const fetchDayHabits = createAsyncThunk<Habit[], string>(
     'habits/dayHabits',
     async (date) => {
-        const { data } = await api.get<Habit[]>(`/habits/${date}`);
+        const { data } = await api.get<Habit[]>(
+            `/habits/${date}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`
+                }
+            }
+        );
         return data;
     },
+);
+
+/** Mark a habit complete on the given date, then refresh that day's habits */
+export const completeHabit = createAsyncThunk<
+    void,
+    { name: string; date: string }
+>(
+    'habits/completeByName',
+    async ({ name, date }, thunkAPI) => {
+        await api.post(
+            '/habits/completeByName',
+            { name, date },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+            }
+        );
+        // After successful POST, re-fetch the habits for this date
+        thunkAPI.dispatch(fetchDayHabits(date));
+    }
 );
 
 // ────────────────────────────────────────────
@@ -66,6 +101,17 @@ const habitSlice = createSlice({
             })
             .addCase(fetchDayHabits.fulfilled, (s, a) => {
                 s.dayHabits = a.payload;
+            })
+            .addCase(completeHabit.pending, (s) => {
+                s.loading = true;
+            })
+            .addCase(completeHabit.fulfilled, (s) => {
+                // no direct state change—the fetchDayHabits dispatch will update dayHabits
+                s.loading = false;
+            })
+            .addCase(completeHabit.rejected, (s, action) => {
+                s.error = action.error.message || 'Error completing habit';
+                s.loading = false;
             });
     },
 });

@@ -3,6 +3,7 @@ import 'react-calendar-heatmap/dist/styles.css';
 // import { useTheme } from '@mui/material';
 import { subDays } from 'date-fns';
 import { DailySummary } from '../types/habit';
+// import { useTheme } from '@emotion/react';
 
 interface Props {
     data: DailySummary[];
