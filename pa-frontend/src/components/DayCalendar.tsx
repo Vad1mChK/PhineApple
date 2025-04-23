@@ -1,9 +1,10 @@
+// src/components/DayCalendar.tsx
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { format } from 'date-fns';
+import { TextField } from '@mui/material';
 
 interface Props {
-    selected: string;
-    onChange(next: string): void;
+    selected: Date;
+    onChange: (next: Date) => void;
 }
 
 export default function DayCalendar({ selected, onChange }: Props) {
@@ -11,8 +12,13 @@ export default function DayCalendar({ selected, onChange }: Props) {
         <DatePicker
             label="Pick a day"
             value={selected}
-            onChange={(val) => val && onChange(format(val as Date, 'yyyy-MM-dd'))}
-            // renderInput={(params) => <TextField {...params} fullWidth sx={{ my: 2 }} />}
+            onChange={(val: Date | null) => {
+                if (val) {
+                    onChange(val);
+                }
+            }}
+            slots={{ textField: TextField }}
+            slotProps={{ textField: { fullWidth: true, sx: { my: 2 } } }}
         />
     );
 }
