@@ -1,20 +1,28 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import { useAppSelector } from './store';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import PrivateRoute from './routes/PrivateRoute';
+import AuthRoutes from './routes/AuthRoutes';
 
 export default function App() {
-    const user = useAppSelector((state) => state.auth.user);
-
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+        <Routes>
+            <Route element={<AuthRoutes />}>
+                <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
-                <Route path="/secret" element={<Dashboard />} />
-            </Routes>
-        </BrowserRouter>
+            </Route>
+
+            <Route
+                path="/dashboard"
+                element={
+                    <PrivateRoute>
+                        <Dashboard />
+                    </PrivateRoute>
+                }
+            />
+
+            <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
     );
 }
